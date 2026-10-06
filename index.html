@@ -1,0 +1,3709 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AURORA — AI Resilient Space Communication</title>
+<meta name="description" content="AURORA is a virtual AI-powered spacecraft communication resilience simulator with digital twins, DTN recovery, emergency imaging and a blockchain mission ledger.">
+
+<style>
+:root{
+  --bg:#020817;
+  --bg2:#061226;
+  --panel:#0a1730;
+  --panel2:#102348;
+  --text:#f4f8ff;
+  --muted:#8da6c8;
+  --line:#1a3560;
+  --cyan:#65e8ff;
+  --blue:#6d7dff;
+  --green:#5cf2b1;
+  --amber:#ffd27a;
+  --red:#ff6f8d;
+  --violet:#b893ff;
+  --shadow:0 22px 70px rgba(0,0,0,.34);
+}
+
+*{
+  box-sizing:border-box
+}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif
+}
+
+button{
+  font:inherit
+}
+
+body{
+  overflow-x:hidden
+}
+
+.app{
+  min-height:100vh;
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 14% 8%,rgba(89,111,255,.18),transparent 24%),
+    radial-gradient(circle at 86% 12%,rgba(54,231,255,.13),transparent 26%),
+    radial-gradient(circle at 50% 92%,rgba(133,75,255,.11),transparent 28%),
+    linear-gradient(180deg,#020817 0%,#041226 46%,#020817 100%)
+}
+
+.app:before{
+  content:"";
+  position:fixed;
+  inset:-20%;
+  z-index:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 30% 30%,rgba(101,232,255,.08),transparent 20%),
+    radial-gradient(circle at 70% 65%,rgba(109,125,255,.10),transparent 22%),
+    repeating-linear-gradient(
+      115deg,
+      transparent 0 74px,
+      rgba(120,180,255,.025) 75px,
+      transparent 76px
+    );
+  animation:auroraDrift 18s ease-in-out infinite alternate
+}
+
+.app:after{
+  content:"✦  ·  ✧   ·   ✦   ·   ˚   ·   ✧   ·  ✦";
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  color:rgba(213,239,255,.2);
+  font-size:14px;
+  letter-spacing:32px;
+  line-height:62px;
+  white-space:normal;
+  overflow:hidden;
+  transform:rotate(-7deg) scale(1.15);
+  opacity:.42;
+  text-shadow:0 0 14px rgba(93,228,255,.4)
+}
+
+@keyframes auroraDrift{
+  0%{
+    transform:translate3d(-1%,0,0) scale(1)
+  }
+  100%{
+    transform:translate3d(2%,-1.5%,0) scale(1.04)
+  }
+}
+
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  backdrop-filter:blur(14px);
+  background:rgba(6,17,28,.82);
+  border-bottom:1px solid rgba(93,228,255,.12);
+  padding:16px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px
+}
+
+.logo{
+  width:42px;
+  height:42px;
+  border:1px solid rgba(93,228,255,.55);
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(
+    145deg,
+    rgba(93,228,255,.12),
+    rgba(90,140,255,.08)
+  );
+  box-shadow:0 0 28px rgba(93,228,255,.16)
+}
+
+.logo svg{
+  width:24px;
+  height:24px
+}
+
+.brand h1{
+  font-size:18px;
+  letter-spacing:.22em;
+  margin:0
+}
+
+.brand small{
+  display:block;
+  color:var(--muted);
+  letter-spacing:.08em;
+  margin-top:2px
+}
+
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:12px
+}
+
+.status-pill{
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(83,230,156,.08);
+  border:1px solid rgba(83,230,156,.28);
+  color:var(--green);
+  font-size:12px;
+  font-weight:700
+}
+
+.clock{
+  font-variant-numeric:tabular-nums;
+  color:var(--muted);
+  font-size:12px
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:250px minmax(0,1fr);
+  min-height:calc(100vh - 75px)
+}
+
+.sidebar{
+  border-right:1px solid var(--line);
+  padding:18px 14px;
+  background:rgba(8,23,36,.7)
+}
+
+.nav-title{
+  font-size:11px;
+  letter-spacing:.18em;
+  color:#587895;
+  margin:10px 10px 8px
+}
+
+.nav{
+  display:grid;
+  gap:7px
+}
+
+.nav button{
+  background:transparent;
+  border:1px solid transparent;
+  color:#a9c0d7;
+  text-align:left;
+  padding:11px 12px;
+  border-radius:11px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:10px
+}
+
+.nav button:hover,
+.nav button.active{
+  background:
+    linear-gradient(
+      90deg,
+      rgba(93,228,255,.1),
+      rgba(90,140,255,.05)
+    );
+  border-color:rgba(93,228,255,.18);
+  color:var(--text)
+}
+
+.side-note{
+  margin-top:16px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:rgba(255,255,255,.015);
+  font-size:11px;
+  line-height:1.5;
+  color:var(--muted)
+}
+
+.side-note strong{
+  color:#dfeefb
+}
+
+.main{
+  padding:22px;
+  min-width:0
+}
+
+.hero{
+  display:grid;
+  grid-template-columns:minmax(0,1.5fr) minmax(280px,.8fr);
+  gap:16px;
+  margin-bottom:16px
+}
+
+.hero-card,
+.panel,
+.metric,
+.event,
+.twin,
+.relay,
+.ledger-block,
+.camera{
+  border:1px solid var(--line);
+  background:
+    linear-gradient(
+      160deg,
+      rgba(17,39,61,.92),
+      rgba(8,23,36,.96)
+    );
+  box-shadow:var(--shadow);
+  border-radius:18px
+}
+
+.hero-card{
+  padding:22px;
+  position:relative;
+  overflow:hidden
+}
+
+.hero-card:after{
+  content:"";
+  position:absolute;
+  width:280px;
+  height:280px;
+  right:-100px;
+  top:-80px;
+  border-radius:50%;
+  background:
+    radial-gradient(
+      circle,
+      rgba(93,228,255,.2),
+      transparent 68%
+    );
+  pointer-events:none
+}
+
+.eyebrow{
+  font-size:11px;
+  letter-spacing:.2em;
+  color:var(--cyan);
+  font-weight:800
+}
+
+.hero h2{
+  margin:8px 0 8px;
+  font-size:34px;
+  line-height:1.05
+}
+
+.hero p{
+  color:var(--muted);
+  max-width:760px;
+  line-height:1.55;
+  margin:0
+}
+
+.controls{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:18px
+}
+
+.btn{
+  border:1px solid var(--line);
+  background:#0a1b2a;
+  color:#d8efff;
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700
+}
+
+.btn:hover{
+  border-color:#2c638c
+}
+
+.btn.primary{
+  background:linear-gradient(100deg,#0b6f89,#365edb);
+  border-color:rgba(93,228,255,.5);
+  box-shadow:0 0 28px rgba(93,228,255,.12)
+}
+
+.btn.warn{
+  background:rgba(255,100,120,.09);
+  border-color:rgba(255,100,120,.32);
+  color:#ffd2d8
+}
+
+.btn.good{
+  background:rgba(83,230,156,.08);
+  border-color:rgba(83,230,156,.28);
+  color:#cffff0
+}
+
+.scenario{
+  padding:18px
+}
+
+.scenario h3{
+  margin:0 0 10px;
+  font-size:13px;
+  letter-spacing:.12em
+}
+
+.scenario select{
+  width:100%;
+  padding:11px 12px;
+  background:#071522;
+  border:1px solid var(--line);
+  color:var(--text);
+  border-radius:10px
+}
+
+.scenario .mini{
+  margin-top:12px;
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.5
+}
+
+.grid-4{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:16px
+}
+
+.metric{
+  padding:15px
+}
+
+.metric .label{
+  font-size:11px;
+  color:#7294af;
+  letter-spacing:.08em
+}
+
+.metric .value{
+  font-size:28px;
+  font-weight:800;
+  margin:5px 0
+}
+
+.metric .sub{
+  font-size:11px;
+  color:var(--muted)
+}
+
+.state-green{
+  color:var(--green)
+}
+
+.state-amber{
+  color:var(--amber)
+}
+
+.state-red{
+  color:var(--red)
+}
+
+.state-blue{
+  color:var(--cyan)
+}
+
+.section{
+  display:none
+}
+
+.section.active{
+  display:block
+}
+
+.two{
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:16px
+}
+
+.panel{
+  padding:18px;
+  margin-bottom:16px
+}
+
+.panel h3{
+  margin:0 0 12px;
+  font-size:14px;
+  letter-spacing:.08em
+}
+
+.panel .muted{
+  color:var(--muted);
+  font-size:12px
+}
+
+.telemetry-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px
+}
+
+.telemetry{
+  padding:13px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:rgba(255,255,255,.015)
+}
+
+.telemetry .t{
+  font-size:11px;
+  color:#7090aa
+}
+
+.telemetry .v{
+  font-size:22px;
+  font-weight:800;
+  margin-top:6px
+}
+
+.bar{
+  height:7px;
+  border-radius:10px;
+  background:#06111c;
+  overflow:hidden;
+  margin-top:7px;
+  border:1px solid #143049
+}
+
+.bar>span{
+  display:block;
+  height:100%;
+  width:50%;
+  background:linear-gradient(90deg,#5de4ff,#5a8cff);
+  border-radius:10px;
+  transition:width .45s ease
+}
+
+.ai-box{
+  padding:16px;
+  border-radius:14px;
+  border:1px solid rgba(179,140,255,.25);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(179,140,255,.1),
+      rgba(90,140,255,.05)
+    )
+}
+
+.ai-line{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+  margin:9px 0;
+  font-size:12px
+}
+
+.ai-label{
+  color:#a88fe9
+}
+
+.ai-value{
+  text-align:right
+}
+
+.risk{
+  font-size:42px;
+  font-weight:900;
+  line-height:1
+}
+
+.risk small{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:600
+}
+
+.recommend{
+  margin-top:12px;
+  padding:12px;
+  border-radius:11px;
+  background:rgba(83,230,156,.07);
+  border:1px solid rgba(83,230,156,.24);
+  color:#d9fff0;
+  font-size:12px;
+  line-height:1.5
+}
+
+.decision-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:12px
+}
+
+.decision{
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#081725
+}
+
+.decision strong{
+  font-size:12px
+}
+
+.decision span{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  margin-top:5px
+}
+
+.twin-wrap{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px
+}
+
+.twin{
+  padding:15px
+}
+
+.twin h4{
+  margin:0 0 8px;
+  font-size:12px
+}
+
+.twin .sync{
+  font-size:10px;
+  color:var(--muted);
+  margin-bottom:12px
+}
+
+.twin-row{
+  display:flex;
+  justify-content:space-between;
+  padding:7px 0;
+  border-bottom:1px dashed rgba(255,255,255,.08);
+  font-size:11px
+}
+
+.drift{
+  font-weight:800
+}
+
+.relay-list{
+  display:grid;
+  gap:10px
+}
+
+.relay{
+  padding:12px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px
+}
+
+.relay h4{
+  margin:0;
+  font-size:12px
+}
+
+.relay small{
+  display:block;
+  color:var(--muted);
+  margin-top:4px
+}
+
+.relay-status{
+  font-size:10px;
+  font-weight:800
+}
+
+.progress{
+  height:5px;
+  background:#06111c;
+  border-radius:10px;
+  overflow:hidden;
+  margin-top:9px
+}
+
+.progress span{
+  display:block;
+  height:100%;
+  background:linear-gradient(90deg,#53e69c,#5de4ff);
+  transition:width .45s
+}
+
+.queue{
+  display:grid;
+  gap:8px
+}
+
+.queue-item{
+  padding:11px 12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  font-size:11px
+}
+
+.queue-item .priority{
+  font-size:10px;
+  color:var(--amber)
+}
+
+.ledger{
+  display:grid;
+  gap:9px
+}
+
+.ledger-block{
+  padding:12px
+}
+
+.ledger-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px
+}
+
+.ledger-top strong{
+  font-size:11px
+}
+
+.hash{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:9px;
+  color:#72a7c9;
+  word-break:break-all;
+  margin-top:7px
+}
+
+.camera-view{
+  height:285px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  overflow:hidden;
+  position:relative;
+  background:
+    radial-gradient(
+      circle at 72% 42%,
+      rgba(93,228,255,.12),
+      transparent 26%
+    ),
+    linear-gradient(160deg,#091928,#050b12)
+}
+
+.camera-view svg{
+  width:100%;
+  height:100%;
+  display:block
+}
+
+.camera-meta{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-top:10px
+}
+
+.camera-stat{
+  padding:9px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.02)
+}
+
+.camera-stat span{
+  display:block;
+  font-size:9px;
+  color:#6e8da6
+}
+
+.camera-stat strong{
+  display:block;
+  font-size:12px;
+  margin-top:4px
+}
+
+.timeline{
+  display:grid;
+  gap:8px;
+  max-height:360px;
+  overflow:auto
+}
+
+.event{
+  padding:10px 12px
+}
+
+.event .top{
+  display:flex;
+  justify-content:space-between;
+  font-size:10px;
+  color:#6d8ca5
+}
+
+.event p{
+  margin:6px 0 0;
+  font-size:11px;
+  color:#cfe0ed;
+  line-height:1.4
+}
+
+.footer-note{
+  font-size:10px;
+  color:#5f7c95;
+  text-align:center;
+  padding:18px 0
+}
+
+.tag{
+  display:inline-block;
+  padding:3px 7px;
+  border-radius:999px;
+  font-size:9px;
+  background:rgba(93,228,255,.08);
+  color:var(--cyan);
+  border:1px solid rgba(93,228,255,.2)
+}
+
+.kpi-line{
+  display:flex;
+  justify-content:space-between;
+  margin:6px 0;
+  font-size:11px
+}
+
+.divider{
+  height:1px;
+  background:var(--line);
+  margin:14px 0
+}
+
+.alert-banner{
+  padding:11px 12px;
+  border-radius:11px;
+  border:1px solid rgba(255,100,120,.32);
+  background:rgba(255,100,120,.08);
+  font-size:11px;
+  color:#ffd5dc;
+  margin-bottom:12px
+}
+
+.success-banner{
+  padding:11px 12px;
+  border-radius:11px;
+  border:1px solid rgba(83,230,156,.24);
+  background:rgba(83,230,156,.07);
+  font-size:11px;
+  color:#d4ffef;
+  margin-bottom:12px
+}
+
+@media(max-width:1050px){
+  .layout{
+    grid-template-columns:1fr
+  }
+
+  .sidebar{
+    position:sticky;
+    top:74px;
+    z-index:40;
+    border-right:0;
+    border-bottom:1px solid var(--line);
+    padding:10px;
+    overflow:auto
+  }
+
+  .nav{
+    display:flex;
+    min-width:max-content
+  }
+
+  .nav button{
+    white-space:nowrap
+  }
+
+  .nav-title,
+  .side-note{
+    display:none
+  }
+
+  .hero,
+  .two{
+    grid-template-columns:1fr
+  }
+
+  .grid-4{
+    grid-template-columns:repeat(2,1fr)
+  }
+}
+
+@media(max-width:650px){
+  .main{
+    padding:14px
+  }
+
+  .header{
+    padding:12px 14px
+  }
+
+  .header-right .clock{
+    display:none
+  }
+
+  .brand small{
+    display:none
+  }
+
+  .hero h2{
+    font-size:28px
+  }
+
+  .grid-4,
+  .telemetry-grid,
+  .twin-wrap,
+  .camera-meta,
+  .decision-grid{
+    grid-template-columns:1fr 1fr
+  }
+
+  .decision-grid{
+    grid-template-columns:1fr
+  }
+
+  .telemetry-grid{
+    grid-template-columns:1fr 1fr
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app" id="app">
+
+<header class="header">
+
+  <div class="brand">
+
+    <div class="logo" aria-label="Aurora logo">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+      >
+        <circle cx="12" cy="12" r="8"></circle>
+
+        <path d="M4 14.5c4.3-2.3 7.4-7.4 7.7-11.3"></path>
+
+        <path d="M8.2 18.8c4.7-1.2 8.5-4.6 10.6-8.4"></path>
+
+        <circle
+          cx="16.7"
+          cy="7.3"
+          r="1.2"
+          fill="currentColor"
+        ></circle>
+      </svg>
+    </div>
+
+    <div>
+      <h1>AURORA</h1>
+      <small>AI RESILIENT SPACE COMMUNICATION</small>
+    </div>
+
+  </div>
+
+  <div class="header-right">
+
+    <div
+      class="status-pill"
+      id="missionState"
+    >
+      MISSION NOMINAL
+    </div>
+
+    <div
+      class="clock"
+      id="utcClock"
+    >
+      T+ 00:00:00
+    </div>
+
+  </div>
+
+</header>
+
+<div class="layout">
+
+<aside class="sidebar">
+
+  <div class="nav-title">
+    MISSION CONTROL
+  </div>
+
+  <nav class="nav" id="nav">
+
+    <button
+      class="active"
+      data-section="overview"
+    >
+      ◈ Overview
+    </button>
+
+    <button
+      data-section="guardian"
+    >
+      ✦ AI Guardian
+    </button>
+
+    <button
+      data-section="twins"
+    >
+      ◫ Digital Twins
+    </button>
+
+    <button
+      data-section="relay"
+    >
+      ⇄ Communication
+    </button>
+
+    <button
+      data-section="imaging"
+    >
+      ◎ Emergency Imaging
+    </button>
+
+    <button
+      data-section="ledger"
+    >
+      ⬡ Blockchain Ledger
+    </button>
+
+  </nav>
+
+  <div class="side-note">
+
+    <strong>Simulation only</strong><br>
+
+    Virtual prototype for research and competition demonstration.
+    It models resilient decision-making; it does not directly control a spacecraft.
+
+  </div>
+
+</aside>
+
+<main class="main">
+
+<section class="hero">
+
+  <div class="hero-card">
+
+    <div class="eyebrow">
+      MISSION AURORA-01 · DIRECT-TO-EARTH
+    </div>
+
+    <h2>
+      When the link fails, the mission keeps thinking.
+    </h2>
+
+    <p>
+      AI predicts communication and onboard-system failures,
+      prioritizes critical data, maintains a resilient
+      store-and-forward queue, and keeps Space ↔ Earth
+      digital twins consistent through outages.
+    </p>
+
+    <div class="controls">
+
+      <button
+        class="btn primary"
+        id="startBtn"
+      >
+        ▶ Start Simulation
+      </button>
+
+      <button
+        class="btn"
+        id="pauseBtn"
+      >
+        Ⅱ Pause
+      </button>
+
+      <button
+        class="btn warn"
+        id="failBtn"
+      >
+        ⚠ Inject Failure
+      </button>
+
+      <button
+        class="btn good"
+        id="resetBtn"
+      >
+        ↺ Reset
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="scenario">
+
+    <h3>
+      SCENARIO INJECTION
+    </h3>
+
+    <select id="scenarioSelect">
+
+      <option value="comm">
+        Communication degradation
+      </option>
+
+      <option value="computer">
+        Main computer failure
+      </option>
+
+      <option value="oxygen">
+        Oxygen leak
+      </option>
+
+      <option value="radiation">
+        Radiation event
+      </option>
+
+      <option value="power">
+        Power anomaly
+      </option>
+
+      <option value="impact">
+        Micrometeoroid impact
+      </option>
+
+    </select>
+
+    <div class="mini">
+
+      The demo intentionally injects faults so the AI
+      decision engine can predict, explain, and respond
+      before total mission isolation.
+
+    </div>
+
+  </div>
+
+</section>
+
+<div class="grid-4">
+
+  <div class="metric">
+
+    <div class="label">
+      COMM LINK
+    </div>
+
+    <div
+      class="value state-green"
+      id="mComm"
+    >
+      98%
+    </div>
+
+    <div
+      class="sub"
+      id="mCommSub"
+    >
+      Direct ground link
+    </div>
+
+  </div>
+
+  <div class="metric">
+
+    <div class="label">
+      AI RISK
+    </div>
+
+    <div
+      class="value state-blue"
+      id="mRisk"
+    >
+      08%
+    </div>
+
+    <div
+      class="sub"
+      id="mRiskSub"
+    >
+      Low anomaly likelihood
+    </div>
+
+  </div>
+
+  <div class="metric">
+
+    <div class="label">
+      MISSION DATA
+    </div>
+
+    <div
+      class="value"
+      id="mQueue"
+    >
+      3
+    </div>
+
+    <div class="sub">
+      Queued critical packets
+    </div>
+
+  </div>
+
+  <div class="metric">
+
+    <div class="label">
+      TWIN SYNC
+    </div>
+
+    <div
+      class="value state-green"
+      id="mTwin"
+    >
+      100%
+    </div>
+
+    <div
+      class="sub"
+      id="mTwinSub"
+    >
+      Last sync: now
+    </div>
+
+  </div>
+
+</div>
+
+<section
+  class="section active"
+  id="overview"
+>
+
+<div class="two">
+
+<div>
+
+<div class="panel">
+
+  <h3>
+    SPACECRAFT TELEMETRY
+  </h3>
+
+  <div class="muted">
+    Live virtual telemetry feeds consumed by the AI inference engine.
+  </div>
+
+  <div class="divider"></div>
+
+  <div
+    class="telemetry-grid"
+    id="telemetryGrid"
+  ></div>
+
+</div>
+
+<div class="panel">
+
+  <h3>
+    AI DECISION TIMELINE
+  </h3>
+
+  <div
+    class="timeline"
+    id="timeline"
+  ></div>
+
+</div>
+
+</div>
+
+<div>
+
+<div class="panel">
+
+  <h3>
+    MISSION ALERT
+  </h3>
+
+  <div
+    id="alertArea"
+    class="success-banner"
+  >
+    All monitored spacecraft systems are within nominal operating bands.
+  </div>
+
+  <div class="kpi-line">
+    <span>Crew safety margin</span>
+    <strong id="safetyKpi">96%</strong>
+  </div>
+
+  <div class="kpi-line">
+    <span>Mission continuity</span>
+    <strong id="continuityKpi">98%</strong>
+  </div>
+
+  <div class="kpi-line">
+    <span>AI confidence</span>
+    <strong id="confidenceKpi">91%</strong>
+  </div>
+
+</div>
+
+<div class="panel">
+
+  <h3>
+    COMMUNICATION PATHS
+  </h3>
+
+  <div
+    class="relay-list"
+    id="relayMini"
+  ></div>
+
+</div>
+
+<div class="panel">
+
+  <h3>
+    MISSION OBJECTIVE
+  </h3>
+
+  <p class="muted">
+    Maintain crew awareness and mission continuity
+    during a predicted communication failure without
+    relying on satellite relays.
+  </p>
+
+  <span class="tag">
+    DIRECT GROUND LINKS · DTN · AI
+  </span>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section
+  class="section"
+  id="guardian"
+>
+
+<div class="two">
+
+<div>
+
+<div class="panel">
+
+  <h3>
+    AI COMMUNICATION GUARDIAN
+  </h3>
+
+  <div class="ai-box">
+
+    <div class="ai-line">
+
+      <span class="ai-label">
+        Current risk
+      </span>
+
+      <strong
+        class="risk"
+        id="riskLarge"
+      >
+        08%
+        <small>RISK</small>
+      </strong>
+
+    </div>
+
+    <div class="ai-line">
+
+      <span class="ai-label">
+        Predicted failure window
+      </span>
+
+      <strong id="predWindow">
+        Not predicted
+      </strong>
+
+    </div>
+
+    <div class="ai-line">
+
+      <span class="ai-label">
+        Primary cause hypothesis
+      </span>
+
+      <strong id="causeHyp">
+        No anomaly
+      </strong>
+
+    </div>
+
+    <div class="ai-line">
+
+      <span class="ai-label">
+        Model confidence
+      </span>
+
+      <strong id="aiConf">
+        91%
+      </strong>
+
+    </div>
+
+    <div
+      class="recommend"
+      id="aiRecommend"
+    >
+      Maintain nominal link. Continue observing trend
+      vectors and packet-loss slope.
+    </div>
+
+  </div>
+
+</div>
+
+<div class="panel">
+
+  <h3>
+    DECISION OPTIONS
+  </h3>
+
+  <div
+    class="decision-grid"
+    id="decisionGrid"
+  ></div>
+
+</div>
+
+</div>
+
+<div>
+
+<div class="panel">
+
+  <h3>
+    EXPLAINABLE SIGNALS
+  </h3>
+
+  <div id="signalReasons"></div>
+
+</div>
+
+<div class="panel">
+
+  <h3>
+    AUTONOMY POLICY
+  </h3>
+
+  <p class="muted">
+    AURORA ranks decisions by crew safety,
+    communication continuity, mission value and energy cost.
+    It can stage a recovery action before the predicted failure window.
+  </p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section
+  class="section"
+  id="twins"
+>
+
+<div class="panel">
+
+  <h3>
+    DUAL DIGITAL TWIN — SPACE ↔ EARTH
+  </h3>
+
+  <div class="muted">
+    The Earth twin predicts forward during outages;
+    the Space twin remains the source of physical truth.
+    Reconnection triggers reconciliation.
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="twin-wrap">
+
+    <div class="twin">
+
+      <h4>
+        🚀 SPACE TWIN · ONBOARD
+      </h4>
+
+      <div class="sync">
+        Live source state
+      </div>
+
+      <div id="spaceTwin"></div>
+
+    </div>
+
+    <div class="twin">
+
+      <h4>
+        🌍 EARTH TWIN · MISSION CONTROL
+      </h4>
+
+      <div
+        class="sync"
+        id="earthTwinSync"
+      >
+        Predicted state · synchronized
+      </div>
+
+      <div id="earthTwin"></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div class="panel">
+
+  <h3>
+    TWIN RECONCILIATION
+  </h3>
+
+  <div
+    id="twinReconcile"
+    class="success-banner"
+  >
+    No drift detected. Space and Earth states agree.
+  </div>
+
+</div>
+
+</section>
+
+<section
+  class="section"
+  id="relay"
+>
+
+<div class="two">
+
+<div>
+
+<div class="panel">
+
+  <h3>
+    RESILIENT COMMUNICATION FABRIC
+  </h3>
+
+  <div class="muted">
+    No satellite relay is assumed in this simulation.
+    The spacecraft evaluates direct Earth-facing opportunities
+    and a delay-tolerant store-and-forward queue.
+  </div>
+
+  <div class="divider"></div>
+
+  <div
+    class="relay-list"
+    id="relayFull"
+  ></div>
+
+</div>
+
+<div class="panel">
+
+  <h3>
+    DTN OUTBOUND QUEUE
+  </h3>
+
+  <div
+    class="queue"
+    id="queue"
+  ></div>
+
+</div>
+
+</div>
+
+<div>
+
+<div class="panel">
+
+  <h3>
+    FAILURE RECOVERY
+  </h3>
+
+  <div id="recoveryCard"></div>
+
+</div>
+
+<div class="panel">
+
+  <h3>
+    LINK STRATEGY
+  </h3>
+
+  <div class="muted">
+    AI will prefer the path with the highest expected
+    delivery probability while preserving power and critical telemetry.
+  </div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section
+  class="section"
+  id="imaging"
+>
+
+<div class="two">
+
+<div>
+
+<div class="panel">
+
+  <h3>
+    🚨 SPACE EMERGENCY IMAGING
+  </h3>
+
+  <div
+    id="imageAlert"
+    class="success-banner"
+  >
+    No emergency imaging trigger active.
+  </div>
+
+  <div
+    class="camera-view"
+    id="cameraView"
+  ></div>
+
+  <div class="camera-meta">
+
+    <div class="camera-stat">
+      <span>FRAME TYPE</span>
+      <strong id="frameType">
+        Standby
+      </strong>
+    </div>
+
+    <div class="camera-stat">
+      <span>RESOLUTION</span>
+      <strong id="frameRes">
+        1920×1080
+      </strong>
+    </div>
+
+    <div class="camera-stat">
+      <span>CAPTURE ID</span>
+      <strong id="frameId">
+        —
+      </strong>
+    </div>
+
+    <div class="camera-stat">
+      <span>AI VISION</span>
+      <strong id="frameVision">
+        Standby
+      </strong>
+    </div>
+
+  </div>
+
+  <div class="controls">
+
+    <button
+      class="btn primary"
+      id="captureBtn"
+    >
+      ◎ Capture Emergency Frame
+    </button>
+
+    <button
+      class="btn"
+      id="analyzeBtn"
+    >
+      ✦ Analyze Frame
+    </button>
+
+  </div>
+
+</div>
+
+</div>
+
+<div>
+
+<div class="panel">
+
+  <h3>
+    IMAGING POLICY
+  </h3>
+
+  <p class="muted">
+    On a verified red-alert condition,
+    the onboard imaging service captures an authorized
+    frame of the affected spacecraft area, creates a compact
+    evidence packet, and places it at the highest mission-data priority.
+  </p>
+
+  <div class="divider"></div>
+
+  <div class="kpi-line">
+    <span>Capture trigger</span>
+    <strong>Red alert</strong>
+  </div>
+
+  <div class="kpi-line">
+    <span>Storage mode</span>
+    <strong>Local + DTN</strong>
+  </div>
+
+  <div class="kpi-line">
+    <span>Transmission priority</span>
+    <strong>Critical</strong>
+  </div>
+
+</div>
+
+<div class="panel">
+
+  <h3>
+    AI VISUAL FINDINGS
+  </h3>
+
+  <div
+    id="visionFindings"
+    class="muted"
+  >
+    No image analyzed yet.
+  </div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section
+  class="section"
+  id="ledger"
+>
+
+<div class="two">
+
+<div>
+
+<div class="panel">
+
+  <h3>
+    ⬡ BLOCKCHAIN MISSION LEDGER
+  </h3>
+
+  <div class="muted">
+    A local, hash-linked ledger makes critical
+    events tamper-evident for this prototype.
+  </div>
+
+  <div class="divider"></div>
+
+  <div
+    class="ledger"
+    id="ledgerList"
+  ></div>
+
+</div>
+
+</div>
+
+<div>
+
+<div class="panel">
+
+  <h3>
+    LEDGER INTEGRITY
+  </h3>
+
+  <div class="kpi-line">
+    <span>Blocks</span>
+    <strong id="blockCount">0</strong>
+  </div>
+
+  <div class="kpi-line">
+    <span>Chain status</span>
+    <strong
+      class="state-green"
+      id="chainStatus"
+    >
+      VALID
+    </strong>
+  </div>
+
+  <div class="kpi-line">
+    <span>Last event</span>
+    <strong id="lastBlock">
+      —
+    </strong>
+  </div>
+
+  <div class="divider"></div>
+
+  <p class="muted">
+    The ledger stores telemetry snapshots,
+    alerts, AI decisions, imaging records and
+    recovery actions. It is not used as the communication channel.
+  </p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<div class="footer-note">
+  AURORA virtual prototype · Direct-to-Earth scenario ·
+  AI inference is simulated with an explainable rules/trend engine ·
+  Not flight-certified.
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<script>
+
+const state = {
+  running:false,
+  elapsed:0,
+  tick:null,
+  scenario:'comm',
+  failureInjected:false,
+  comm:98,
+  risk:8,
+  queue:3,
+  twinSync:100,
+  crewSafety:96,
+  continuity:98,
+  confidence:91,
+  oxygen:92,
+  pressure:99,
+  temp:22,
+  power:84,
+  cpu:41,
+  radiation:12,
+  computer:'NOMINAL',
+  phase:'CRUISE',
+  captured:false,
+  analyzed:false,
+  frameId:null,
+  ledger:[],
+  prevHash:'GENESIS'
+};
+
+const scenarios = {
+
+  comm:{
+    name:'Communication degradation',
+    cause:'Increasing packet loss / link fade',
+    risk:84,
+    comm:43,
+    continuity:66,
+    desc:'Signal quality is falling faster than normal. AI recommends proactive path selection and DTN staging.'
+  },
+
+  computer:{
+    name:'Main computer failure',
+    cause:'CPU saturation and process instability',
+    risk:91,
+    comm:72,
+    continuity:52,
+    desc:'The primary flight computer is becoming unstable. AI stages backup-computer takeover and preserves critical telemetry.'
+  },
+
+  oxygen:{
+    name:'Oxygen leak',
+    cause:'Cabin oxygen depletion trend',
+    risk:88,
+    comm:96,
+    continuity:61,
+    desc:'Oxygen is falling above expected crew-consumption rate. AI flags a leak and prioritizes crew-state telemetry.'
+  },
+
+  radiation:{
+    name:'Radiation event',
+    cause:'Solar particle flux spike',
+    risk:86,
+    comm:77,
+    continuity:64,
+    desc:'Radiation exposure threatens electronics. AI recommends protected mode and low-bandwidth critical telemetry.'
+  },
+
+  power:{
+    name:'Power anomaly',
+    cause:'Unexpected battery / load imbalance',
+    risk:82,
+    comm:67,
+    continuity:58,
+    desc:'Power reserve is dropping. AI proposes load shedding while preserving communications and life support.'
+  },
+
+  impact:{
+    name:'Micrometeoroid impact',
+    cause:'Hull vibration and pressure transient',
+    risk:93,
+    comm:61,
+    continuity:49,
+    desc:'A sudden transient suggests structural impact. AI triggers emergency imaging and highest-priority telemetry.'
+  }
+
+};
+
+const telemetryItems = [
+  ['Oxygen','oxygen','%','92'],
+  ['Cabin pressure','pressure','kPa','99'],
+  ['Cabin temp','temp','°C','22'],
+  ['Power reserve','power','%','84'],
+  ['CPU load','cpu','%','41'],
+  ['Radiation index','radiation','uSv/h','12']
+];
+
+const $ = id => document.getElementById(id);
+
+function clamp(n,a=0,b=100){
+  return Math.max(a,Math.min(b,n))
+}
+
+function timeString(s){
+
+  const h = String(
+    Math.floor(s/3600)
+  ).padStart(2,'0');
+
+  const m = String(
+    Math.floor((s%3600)/60)
+  ).padStart(2,'0');
+
+  const x = String(
+    s%60
+  ).padStart(2,'0');
+
+  return `${h}:${m}:${x}`;
+}
+
+function addTimeline(
+  title,
+  body,
+  kind='AI'
+){
+
+  const box = document.createElement('div');
+
+  box.className = 'event';
+
+  box.innerHTML = `
+    <div class="top">
+      <span>${kind}</span>
+      <span>T+ ${timeString(state.elapsed)}</span>
+    </div>
+
+    <p>
+      <strong>${title}</strong>
+      — ${body}
+    </p>
+  `;
+
+  $('timeline').prepend(box);
+
+  while(
+    $('timeline').children.length > 10
+  ){
+    $('timeline').lastElementChild.remove();
+  }
+
+}
+
+function hashString(input){
+
+  let h = 2166136261;
+
+  for(
+    let i=0;
+    i<input.length;
+    i++
+  ){
+
+    h ^= input.charCodeAt(i);
+
+    h = Math.imul(
+      h,
+      16777619
+    );
+
+  }
+
+  return (
+    '00000000' +
+    (h>>>0).toString(16)
+  ).slice(-8) +
+  (
+    '00000000' +
+    Math.abs(Math.sin(h)) *
+    0xffffffff.toString(16)
+  ).slice(0,8);
+
+}
+
+async function sha256(text){
+
+  if(
+    window.crypto?.subtle
+  ){
+
+    const b =
+      new TextEncoder().encode(text);
+
+    const d =
+      await crypto.subtle.digest(
+        'SHA-256',
+        b
+      );
+
+    return [
+      ...new Uint8Array(d)
+    ]
+      .map(
+        x => x.toString(16).padStart(2,'0')
+      )
+      .join('');
+
+  }
+
+  return hashString(text);
+
+}
+
+async function ledgerAdd(
+  event,
+  data
+){
+
+  const payload = {
+
+    index:
+      state.ledger.length + 1,
+
+    timestamp:
+      new Date().toISOString(),
+
+    event,
+
+    data,
+
+    previousHash:
+      state.prevHash
+
+  };
+
+  const hash =
+    await sha256(
+      JSON.stringify(payload)
+    );
+
+  const block = {
+    ...payload,
+    hash
+  };
+
+  state.ledger.push(block);
+
+  state.prevHash = hash;
+
+  renderLedger();
+
+}
+
+function renderLedger(){
+
+  const wrap =
+    $('ledgerList');
+
+  wrap.innerHTML = '';
+
+  state.ledger
+    .slice()
+    .reverse()
+    .forEach(
+      b => {
+
+        const el =
+          document.createElement('div');
+
+        el.className =
+          'ledger-block';
+
+        el.innerHTML = `
+
+          <div class="ledger-top">
+
+            <strong>
+              BLOCK #${String(b.index).padStart(3,'0')}
+              · ${b.event}
+            </strong>
+
+            <span class="tag">
+              HASH-LINKED
+            </span>
+
+          </div>
+
+          <div class="hash">
+            prev: ${b.previousHash}
+          </div>
+
+          <div class="hash">
+            hash: ${b.hash}
+          </div>
+
+        `;
+
+        wrap.appendChild(el);
+
+      }
+    );
+
+  $('blockCount').textContent =
+    state.ledger.length;
+
+  $('lastBlock').textContent =
+    state.ledger.at(-1)?.event ||
+    '—';
+
+}
+
+function renderTelemetry(){
+
+  const wrap =
+    $('telemetryGrid');
+
+  wrap.innerHTML =
+    telemetryItems
+      .map(
+        ([label,key,unit]) => {
+
+          const v =
+            Math.round(
+              state[key]
+            );
+
+          const norm =
+            key === 'radiation'
+              ? clamp(v/2)
+              : key === 'temp'
+              ? clamp((v+10)/60)
+              : v;
+
+          return `
+
+            <div class="telemetry">
+
+              <div class="t">
+                ${label}
+              </div>
+
+              <div class="v">
+                ${v}${unit}
+              </div>
+
+              <div class="bar">
+
+                <span
+                  style="width:${clamp(norm)}%"
+                ></span>
+
+              </div>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join('');
+
+  $('mComm').textContent =
+    state.comm + '%';
+
+  $('mComm').className =
+    'value ' +
+    (
+      state.comm > 75
+        ? 'state-green'
+        : state.comm > 45
+        ? 'state-amber'
+        : 'state-red'
+    );
+
+  $('mCommSub').textContent =
+    state.comm > 75
+      ? 'Direct ground link'
+      : state.comm > 45
+      ? 'Degraded · DTN staged'
+      : 'Link unavailable · DTN only';
+
+  $('mRisk').textContent =
+    String(state.risk).padStart(2,'0') +
+    '%';
+
+  $('mRisk').className =
+    'value ' +
+    (
+      state.risk < 40
+        ? 'state-blue'
+        : state.risk < 75
+        ? 'state-amber'
+        : 'state-red'
+    );
+
+  $('mRiskSub').textContent =
+    state.risk < 40
+      ? 'Low anomaly likelihood'
+      : state.risk < 75
+      ? 'Moderate anomaly'
+      : 'High mission risk';
+
+  $('mQueue').textContent =
+    state.queue;
+
+  $('mTwin').textContent =
+    state.twinSync + '%';
+
+  $('mTwin').className =
+    'value ' +
+    (
+      state.twinSync > 85
+        ? 'state-green'
+        : state.twinSync > 55
+        ? 'state-amber'
+        : 'state-red'
+    );
+
+  $('mTwinSub').textContent =
+    state.twinSync < 100
+      ? 'Earth twin running prediction'
+      : 'Last sync: now';
+
+  $('safetyKpi').textContent =
+    state.crewSafety + '%';
+
+  $('continuityKpi').textContent =
+    state.continuity + '%';
+
+  $('confidenceKpi').textContent =
+    state.confidence + '%';
+
+}
+
+function renderRelays(){
+
+  const paths = [
+
+    [
+      'Ground Station A',
+      'Direct X-band',
+      'READY',
+      state.comm
+    ],
+
+    [
+      'Ground Station B',
+      'Backup S-band',
+      'STANDBY',
+      clamp(state.comm+5)
+    ],
+
+    [
+      'DTN local store',
+      'Store-and-forward',
+      'ACTIVE',
+      100
+    ]
+
+  ];
+
+  const html =
+    paths
+      .map(
+        ([n,t,s,p]) => `
+
+          <div class="relay">
+
+            <div>
+
+              <h4>
+                ${n}
+              </h4>
+
+              <small>
+                ${t}
+              </small>
+
+              <div class="progress">
+
+                <span
+                  style="width:${p}%"
+                ></span>
+
+              </div>
+
+            </div>
+
+            <div
+              class="
+                relay-status
+                ${
+                  s === 'READY' ||
+                  s === 'ACTIVE'
+                    ? 'state-green'
+                    : 'state-amber'
+                }
+              "
+            >
+              ${s}
+            </div>
+
+          </div>
+
+        `
+      )
+      .join('');
+
+  $('relayMini').innerHTML =
+    html;
+
+  $('relayFull').innerHTML =
+    html;
+
+}
+
+function renderQueue(){
+
+  const labels = [
+
+    [
+      'Telemetry snapshot',
+      'CRITICAL'
+    ],
+
+    [
+      'Crew vitals',
+      'CRITICAL'
+    ],
+
+    [
+      'AI decision record',
+      'HIGH'
+    ],
+
+    [
+      'Emergency image',
+      'CRITICAL'
+    ]
+
+  ];
+
+  $('queue').innerHTML =
+    labels
+      .slice(
+        0,
+        state.queue + 1
+      )
+      .map(
+        x => `
+
+          <div class="queue-item">
+
+            <span>
+              ${x[0]}
+            </span>
+
+            <span class="priority">
+              ${x[1]}
+            </span>
+
+          </div>
+
+        `
+      )
+      .join('') ||
+      `
+        <div class="muted">
+          Queue empty.
+        </div>
+      `;
+
+}
+
+function renderGuardian(){
+
+  const sc =
+    scenarios[state.scenario];
+
+  $('riskLarge').innerHTML =
+    String(state.risk).padStart(2,'0') +
+    '% <small>RISK</small>';
+
+  $('predWindow').textContent =
+    state.risk > 70
+      ? Math.max(
+          20,
+          90 -
+          Math.round(
+            state.risk / 3
+          )
+        ) + ' sec'
+      : 'Not predicted';
+
+  $('causeHyp').textContent =
+    state.risk > 30
+      ? sc.cause
+      : 'No anomaly';
+
+  $('aiConf').textContent =
+    state.confidence + '%';
+
+  $('aiRecommend').textContent =
+    state.risk > 75
+      ? sc.desc
+      : state.risk > 45
+      ? 'Stage critical telemetry, monitor trend slope, and prepare the next-best link.'
+      : 'Maintain nominal link. Continue observing trend vectors and packet-loss slope.';
+
+  $('decisionGrid').innerHTML = [
+
+    [
+      'PROACTIVE REROUTE',
+      'Switch to backup ground station',
+      '+ continuity',
+      'LOW energy'
+    ],
+
+    [
+      'PROTECTED MODE',
+      'Reduce non-critical loads',
+      '+ safety',
+      'MED energy'
+    ],
+
+    [
+      'DTN STAGING',
+      'Queue critical packets locally',
+      '+ delivery resilience',
+      'LOW energy'
+    ]
+
+  ]
+    .map(
+      x => `
+
+        <div class="decision">
+
+          <strong>
+            ${x[0]}
+          </strong>
+
+          <span>
+            ${x[1]}
+          </span>
+
+          <span>
+            ${x[2]} · ${x[3]}
+          </span>
+
+        </div>
+
+      `
+    )
+    .join('');
+
+  const reasons = [
+
+    [
+      'Packet-loss slope',
+      state.comm < 80
+        ? 'Rising'
+        : 'Stable'
+    ],
+
+    [
+      'CPU pressure',
+      state.cpu > 80
+        ? 'Critical'
+        : 'Nominal'
+    ],
+
+    [
+      'Resource margin',
+      state.power < 50
+        ? 'Low'
+        : 'Healthy'
+    ],
+
+    [
+      'Anomaly signature',
+      state.risk > 70
+        ? 'Detected'
+        : 'None'
+    ]
+
+  ];
+
+  $('signalReasons').innerHTML =
+    reasons
+      .map(
+        r => `
+
+          <div class="kpi-line">
+
+            <span>
+              ${r[0]}
+            </span>
+
+            <strong>
+              ${r[1]}
+            </strong>
+
+          </div>
+
+        `
+      )
+      .join('');
+
+}
+
+function twinRows(){
+
+  const vals = [
+
+    [
+      'Oxygen',
+      Math.round(state.oxygen) + '%'
+    ],
+
+    [
+      'Pressure',
+      Math.round(state.pressure) + ' kPa'
+    ],
+
+    [
+      'Power',
+      Math.round(state.power) + '%'
+    ],
+
+    [
+      'Temperature',
+      Math.round(state.temp) + '°C'
+    ],
+
+    [
+      'Computer',
+      state.computer
+    ],
+
+    [
+      'Mission phase',
+      state.phase
+    ]
+
+  ];
+
+  return vals
+    .map(
+      v => `
+
+        <div class="twin-row">
+
+          <span>
+            ${v[0]}
+          </span>
+
+          <span>
+            ${v[1]}
+          </span>
+
+        </div>
+
+      `
+    )
+    .join('');
+
+}
+
+function renderTwins(){
+
+  $('spaceTwin').innerHTML =
+    twinRows();
+
+  let drift =
+    100 -
+    state.twinSync;
+
+  const pred = {
+
+    oxygen:
+      clamp(
+        state.oxygen +
+        drift * .2
+      ),
+
+    pressure:
+      clamp(
+        state.pressure -
+        drift * .03,
+        50,
+        110
+      ),
+
+    power:
+      clamp(
+        state.power -
+        drift * .4
+      ),
+
+    temp:
+      state.temp +
+      drift * .05,
+
+    computer:
+      state.computer,
+
+    phase:
+      state.phase
+
+  };
+
+  $('earthTwin').innerHTML = [
+
+    [
+      'Oxygen',
+      Math.round(pred.oxygen) +
+      '%'
+    ],
+
+    [
+      'Pressure',
+      Math.round(pred.pressure) +
+      ' kPa'
+    ],
+
+    [
+      'Power',
+      Math.round(pred.power) +
+      '%'
+    ],
+
+    [
+      'Temperature',
+      Math.round(pred.temp) +
+      '°C'
+    ],
+
+    [
+      'Computer',
+      pred.computer
+    ],
+
+    [
+      'Mission phase',
+      pred.phase
+    ]
+
+  ]
+    .map(
+      v => `
+
+        <div class="twin-row">
+
+          <span>
+            ${v[0]}
+          </span>
+
+          <span class="drift">
+            ${v[1]}
+          </span>
+
+        </div>
+
+      `
+    )
+    .join('');
+
+  $('earthTwinSync').textContent =
+    state.twinSync === 100
+      ? 'Predicted state · synchronized'
+      : 'Predicted state · awaiting contact';
+
+  $('twinReconcile').className =
+    state.twinSync < 85
+      ? 'alert-banner'
+      : 'success-banner';
+
+  $('twinReconcile').textContent =
+    state.twinSync < 85
+      ? 'Earth twin is running a predicted state because the link is intermittent. Reconciliation will compare actual Space Twin telemetry after reconnection.'
+      : 'No significant drift detected. Space and Earth states agree.';
+
+}
+
+function drawCamera(){
+
+  const cv =
+    $('cameraView');
+
+  const impact =
+    state.scenario === 'impact' ||
+    state.risk > 78;
+
+  cv.innerHTML = `
+
+    <svg
+      viewBox="0 0 900 450"
+      preserveAspectRatio="none"
+      role="img"
+      aria-label="Simulated spacecraft camera frame"
+    >
+
+      <defs>
+
+        <linearGradient
+          id="g"
+          x1="0"
+          x2="1"
+        >
+          <stop
+            offset="0"
+            stop-color="#07111b"
+          />
+
+          <stop
+            offset="1"
+            stop-color="#0b2538"
+          />
+
+        </linearGradient>
+
+        <radialGradient id="r">
+
+          <stop
+            offset="0"
+            stop-color="rgba(93,228,255,.30)"
+          />
+
+          <stop
+            offset="1"
+            stop-color="rgba(93,228,255,0)"
+          />
+
+        </radialGradient>
+
+      </defs>
+
+      <rect
+        width="900"
+        height="450"
+        fill="url(#g)"
+      />
+
+      <circle
+        cx="710"
+        cy="110"
+        r="120"
+        fill="url(#r)"
+      />
+
+      <path
+        d="M0 350 L190 265 L360 315 L560 240 L900 320"
+        fill="none"
+        stroke="#2e6b8f"
+        stroke-width="3"
+        opacity=".65"
+      />
+
+      <rect
+        x="320"
+        y="120"
+        width="270"
+        height="150"
+        rx="12"
+        fill="#102a40"
+        stroke="#5de4ff"
+        stroke-width="3"
+      />
+
+      <rect
+        x="345"
+        y="145"
+        width="95"
+        height="55"
+        rx="6"
+        fill="#05101a"
+        stroke="#3a6d8d"
+      />
+
+      <rect
+        x="455"
+        y="145"
+        width="105"
+        height="55"
+        rx="6"
+        fill="#071722"
+        stroke="#3a6d8d"
+      />
+
+      <circle
+        cx="420"
+        cy="229"
+        r="16"
+        fill="#0b3a52"
+        stroke="#5de4ff"
+      />
+
+      <circle
+        cx="495"
+        cy="229"
+        r="16"
+        fill="#0b3a52"
+        stroke="#5de4ff"
+      />
+
+      ${
+        impact
+        ? `
+          <path
+            d="M538 132 l22 14 -14 18 20 15 -30 12 -6 24 -20 -17 -22 7 8 -22 -11 -22 27 2 15 -20z"
+            fill="none"
+            stroke="#ff6478"
+            stroke-width="4"
+          />
+
+          <text
+            x="595"
+            y="145"
+            fill="#ff9aa8"
+            font-size="18"
+          >
+            IMPACT SIGNATURE
+          </text>
+        `
+        : `
+          <text
+            x="602"
+            y="145"
+            fill="#75cfff"
+            font-size="18"
+          >
+            ONBOARD BAY CAMERA
+          </text>
+        `
+      }
+
+      <text
+        x="30"
+        y="40"
+        fill="#b9d6ea"
+        font-size="18"
+      >
+        AURORA VISION · AUTHORIZED EMERGENCY FRAME
+      </text>
+
+      <text
+        x="30"
+        y="78"
+        fill="#6c93ad"
+        font-size="14"
+      >
+        ${
+          new Date().toLocaleTimeString()
+        }
+        · MODE:
+        ${
+          impact
+          ? 'RED ALERT'
+          : 'STANDBY'
+        }
+      </text>
+
+    </svg>
+
+  `;
+
+}
+
+function renderImaging(){
+
+  drawCamera();
+
+  $('imageAlert').className =
+    state.risk > 78
+      ? 'alert-banner'
+      : 'success-banner';
+
+  $('imageAlert').textContent =
+    state.risk > 78
+      ? 'RED ALERT: onboard imaging trigger armed. Capture the affected spacecraft area and create a critical evidence packet.'
+      : 'No emergency imaging trigger active.';
+
+  $('frameType').textContent =
+    state.captured
+      ? 'Emergency evidence frame'
+      : 'Standby';
+
+  $('frameId').textContent =
+    state.frameId || '—';
+
+  $('frameVision').textContent =
+    state.analyzed
+      ? 'AI analyzed'
+      : 'Standby';
+
+  $('visionFindings').innerHTML =
+    state.analyzed
+      ? `
+        <div class="kpi-line">
+
+          <span>
+            Detected
+          </span>
+
+          <strong>
+            ${
+              (
+                state.scenario === 'impact'
+              )
+              ? 'Possible impact / hull anomaly'
+              : scenarios[state.scenario].name
+            }
+          </strong>
+
+        </div>
+
+        <div class="kpi-line">
+
+          <span>
+            Evidence priority
+          </span>
+
+          <strong class="state-red">
+            CRITICAL
+          </strong>
+
+        </div>
+
+        <div class="kpi-line">
+
+          <span>
+            Recommended action
+          </span>
+
+          <strong>
+            Send with next resilient contact
+          </strong>
+
+        </div>
+      `
+      : 'No image analyzed yet.';
+
+}
+
+async function updateScenario(
+  inject=false
+){
+
+  const sc =
+    scenarios[state.scenario];
+
+  if(!inject){
+
+    state.risk = 8;
+    state.comm = 98;
+    state.queue = 3;
+    state.twinSync = 100;
+    state.crewSafety = 96;
+    state.continuity = 98;
+    state.confidence = 91;
+    state.oxygen = 92;
+    state.pressure = 99;
+    state.temp = 22;
+    state.power = 84;
+    state.cpu = 41;
+    state.radiation = 12;
+    state.computer = 'NOMINAL';
+    state.failureInjected = false;
+    state.phase = 'CRUISE';
+    state.captured = false;
+    state.analyzed = false;
+    state.frameId = null;
+
+    addTimeline(
+      'Scenario armed',
+      sc.name,
+      'SYSTEM'
+    );
+
+    await ledgerAdd(
+      'SCENARIO_ARMED',
+      {
+        scenario:
+          state.scenario
+      }
+    );
+
+  }
+
+  else{
+
+    state.failureInjected = true;
+
+    state.risk =
+      sc.risk;
+
+    state.comm =
+      sc.comm;
+
+    state.continuity =
+      sc.continuity;
+
+    state.confidence =
+      87;
+
+    if(
+      state.scenario === 'computer'
+    ){
+
+      state.cpu = 97;
+      state.computer = 'DEGRADED';
+      state.power = 63;
+
+    }
+
+    if(
+      state.scenario === 'oxygen'
+    ){
+
+      state.oxygen = 61;
+      state.pressure = 86;
+      state.crewSafety = 69;
+
+    }
+
+    if(
+      state.scenario === 'radiation'
+    ){
+
+      state.radiation = 96;
+      state.power = 71;
+
+    }
+
+    if(
+      state.scenario === 'power'
+    ){
+
+      state.power = 34;
+      state.cpu = 72;
+
+    }
+
+    if(
+      state.scenario === 'impact'
+    ){
+
+      state.pressure = 79;
+      state.crewSafety = 57;
+      state.comm = 61;
+
+    }
+
+    if(
+      state.scenario === 'comm'
+    ){
+
+      state.comm = 43;
+      state.twinSync = 71;
+
+    }
+
+    state.queue =
+      Math.max(
+        state.queue,
+        5
+      );
+
+    state.phase =
+      'ANOMALY RESPONSE';
+
+    addTimeline(
+      'Anomaly detected',
+      sc.desc,
+      'AI'
+    );
+
+    await ledgerAdd(
+      'AI_ANOMALY_DETECTED',
+      {
+        scenario:
+          state.scenario,
+        risk:
+          state.risk,
+        comm:
+          state.comm
+      }
+    );
+
+    if(
+      state.risk > 78
+    ){
+
+      state.captured = true;
+
+      state.frameId =
+        'IMG-' +
+        Math.random()
+          .toString(16)
+          .slice(2,8)
+          .toUpperCase();
+
+      addTimeline(
+        'Emergency imaging armed',
+        'Red-alert condition triggered onboard evidence capture.',
+        'AI'
+      );
+
+      await ledgerAdd(
+        'EMERGENCY_IMAGING_ARMED',
+        {
+          frameId:
+            state.frameId
+        }
+      );
+
+    }
+
+  }
+
+  renderAll();
+
+}
+
+async function tick(){
+
+  if(!state.running)
+    return;
+
+  state.elapsed++;
+
+  if(state.failureInjected){
+
+    state.comm =
+      clamp(
+        state.comm -
+        (
+          state.scenario === 'comm'
+            ? 1.1
+            : .35
+        )
+      );
+
+    state.twinSync =
+      clamp(
+        state.twinSync -
+        (
+          state.comm < 60
+            ? .7
+            : .18
+        )
+      );
+
+    state.risk =
+      clamp(
+        state.risk +
+        (
+          state.scenario === 'comm'
+            ? .35
+            : .08
+        )
+      );
+
+    state.confidence =
+      clamp(
+        state.confidence -
+        .02
+      );
+
+    if(
+      state.scenario === 'oxygen'
+    ){
+
+      state.oxygen =
+        clamp(
+          state.oxygen -
+          .55
+        );
+
+      state.pressure =
+        clamp(
+          state.pressure -
+          .18
+        );
+
+    }
+
+    if(
+      state.scenario === 'computer'
+    ){
+
+      state.cpu =
+        clamp(
+          state.cpu -
+          .1
+        );
+
+      state.power =
+        clamp(
+          state.power -
+          .2
+        );
+
+    }
+
+    if(
+      state.scenario === 'power'
+    ){
+
+      state.power =
+        clamp(
+          state.power -
+          .5
+        );
+
+    }
+
+    if(
+      state.scenario === 'radiation'
+    ){
+
+      state.radiation =
+        clamp(
+          state.radiation -
+          .4
+        );
+
+    }
+
+    if(
+      state.scenario === 'impact'
+    ){
+
+      state.pressure =
+        clamp(
+          state.pressure -
+          .15
+        );
+
+    }
+
+    if(
+      state.comm < 20
+    ){
+
+      state.continuity =
+        clamp(
+          state.continuity -
+          .35
+        );
+
+    }
+
+  }
+
+  else{
+
+    state.comm =
+      clamp(
+        state.comm +
+        .03
+      );
+
+    state.twinSync =
+      clamp(
+        state.twinSync +
+        .1
+      );
+
+    state.risk =
+      clamp(
+        state.risk -
+        .03
+      );
+
+    state.power =
+      clamp(
+        state.power -
+        .02
+      );
+
+    state.oxygen =
+      clamp(
+        state.oxygen -
+        .01
+      );
+
+  }
+
+  if(
+    state.elapsed % 8 === 0
+  ){
+
+    addTimeline(
+      'Telemetry evaluated',
+      'AI refreshed anomaly score and communication strategy.',
+      'AI'
+    );
+
+  }
+
+  renderAll();
+
+}
+
+function renderAll(){
+
+  renderTelemetry();
+  renderRelays();
+  renderQueue();
+  renderGuardian();
+  renderTwins();
+  renderImaging();
+
+  $('missionState').textContent =
+    state.failureInjected
+      ? (
+        state.risk > 85
+          ? 'MISSION RED ALERT'
+          : 'MISSION DEGRADED'
+      )
+      : 'MISSION NOMINAL';
+
+  $('missionState').style.color =
+    state.failureInjected
+      ? (
+        state.risk > 85
+          ? 'var(--red)'
+          : 'var(--amber)'
+      )
+      : 'var(--green)';
+
+  $('missionState').style.borderColor =
+    state.failureInjected
+      ? (
+        state.risk > 85
+          ? 'rgba(255,100,120,.35)'
+          : 'rgba(255,205,102,.28)'
+      )
+      : 'rgba(83,230,156,.28)';
+
+  $('alertArea').className =
+    state.failureInjected
+      ? (
+        state.risk > 78
+          ? 'alert-banner'
+          : 'success-banner'
+      )
+      : 'success-banner';
+
+  $('alertArea').textContent =
+    state.failureInjected
+      ? scenarios[state.scenario].desc
+      : 'All monitored spacecraft systems are within nominal operating bands.';
+
+  $('recoveryCard').innerHTML =
+    state.failureInjected
+      ? `
+
+        <div class="alert-banner">
+
+          Recovery staged:
+
+          <strong>
+            ${
+              state.comm > 45
+                ? 'backup ground link + DTN'
+                : 'DTN store-and-forward + protected mode'
+            }
+          </strong>
+
+        </div>
+
+        <div class="kpi-line">
+
+          <span>
+            Next action
+          </span>
+
+          <strong>
+            ${
+              state.comm > 45
+                ? 'REROUTE'
+                : 'STORE'
+            }
+          </strong>
+
+        </div>
+
+        <div class="kpi-line">
+
+          <span>
+            Critical packets queued
+          </span>
+
+          <strong>
+            ${state.queue}
+          </strong>
+
+        </div>
+
+      `
+      : `
+
+        <div class="success-banner">
+
+          No recovery action required.
+          Monitoring continuously.
+
+        </div>
+
+      `;
+
+  drawCamera();
+
+}
+
+function reset(){
+
+  state.running = false;
+
+  clearInterval(
+    state.tick
+  );
+
+  state.elapsed = 0;
+
+  state.ledger = [];
+
+  state.prevHash =
+    'GENESIS';
+
+  updateScenario(false);
+
+}
+
+$('nav').addEventListener(
+  'click',
+  e => {
+
+    const b =
+      e.target.closest('button');
+
+    if(!b)
+      return;
+
+    document
+      .querySelectorAll(
+        '.nav button'
+      )
+      .forEach(
+        x =>
+          x.classList.remove(
+            'active'
+          )
+      );
+
+    b.classList.add(
+      'active'
+    );
+
+    document
+      .querySelectorAll(
+        '.section'
+      )
+      .forEach(
+        s =>
+          s.classList.remove(
+            'active'
+          )
+      );
+
+    $(
+      b.dataset.section
+    ).classList.add(
+      'active'
+    );
+
+  }
+);
+
+$('scenarioSelect').addEventListener(
+  'change',
+  async e => {
+
+    state.scenario =
+      e.target.value;
+
+    await updateScenario(
+      false
+    );
+
+  }
+);
+
+$('startBtn').onclick =
+  () => {
+
+    if(state.running)
+      return;
+
+    state.running =
+      true;
+
+    clearInterval(
+      state.tick
+    );
+
+    state.tick =
+      setInterval(
+        tick,
+        1000
+      );
+
+    addTimeline(
+      'Simulation started',
+      'Continuous telemetry monitoring is active.',
+      'SYSTEM'
+    );
+
+  };
+
+$('pauseBtn').onclick =
+  () => {
+
+    state.running =
+      false;
+
+    clearInterval(
+      state.tick
+    );
+
+    addTimeline(
+      'Simulation paused',
+      'Telemetry simulation is paused; stored mission state remains intact.',
+      'SYSTEM'
+    );
+
+  };
+
+$('failBtn').onclick =
+  () =>
+    updateScenario(
+      true
+    );
+
+$('resetBtn').onclick =
+  reset;
+
+$('captureBtn').onclick =
+  async () => {
+
+    state.captured =
+      true;
+
+    state.frameId =
+      'IMG-' +
+      Math.random()
+        .toString(16)
+        .slice(2,8)
+        .toUpperCase();
+
+    addTimeline(
+      'Emergency image captured',
+      'Authorized onboard camera created ' +
+      state.frameId +
+      '.',
+      'CAMERA'
+    );
+
+    await ledgerAdd(
+      'IMAGE_CAPTURED',
+      {
+        frameId:
+          state.frameId,
+        resolution:
+          '1920x1080',
+        priority:
+          'CRITICAL'
+      }
+    );
+
+    renderAll();
+
+  };
+
+$('analyzeBtn').onclick =
+  async () => {
+
+    if(!state.captured){
+
+      state.captured =
+        true;
+
+      state.frameId =
+        'IMG-' +
+        Math.random()
+          .toString(16)
+          .slice(2,8)
+          .toUpperCase();
+
+      await ledgerAdd(
+        'IMAGE_CAPTURED',
+        {
+          frameId:
+            state.frameId,
+          resolution:
+            '1920x1080',
+          priority:
+            'CRITICAL'
+        }
+      );
+
+    }
+
+    state.analyzed =
+      true;
+
+    addTimeline(
+      'Vision analysis complete',
+      'AI classified the frame and attached findings to the mission evidence packet.',
+      'VISION'
+    );
+
+    await ledgerAdd(
+      'IMAGE_ANALYZED',
+      {
+        frameId:
+          state.frameId,
+        classification:
+          state.scenario
+      }
+    );
+
+    renderAll();
+
+  };
+
+setInterval(
+  () => {
+
+    $('utcClock').textContent =
+      'T+ ' +
+      timeString(
+        state.elapsed
+      );
+
+  },
+  250
+);
+
+async function init(){
+
+  await ledgerAdd(
+    'MISSION_INITIALIZED',
+    {
+      mission:
+        'AURORA-01',
+      mode:
+        'DIRECT_TO_EARTH',
+      relay:
+        'NONE'
+    }
+  );
+
+  await ledgerAdd(
+    'TWIN_INITIALIZED',
+    {
+      space:
+        'ONBOARD',
+      earth:
+        'MISSION_CONTROL'
+    }
+  );
+
+  addTimeline(
+    'Mission initialized',
+    'AURORA monitoring stack online.',
+    'SYSTEM'
+  );
+
+  renderAll();
+
+}
+
+init();
+
+</script>
+
+</body>
+</html>
